@@ -15,17 +15,88 @@ Public Class Form1
 
     Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        'Dim server As String = "127.0.0.1"
+        Dim server As String = "eobx-s-00224"
+        'Dim server As String = "eobx-n-00982"
+
+
+        '--------------
+        'do zrobienia f-cja przełączająca BD
+        '----------------
+
+        Dim myConnectionString As String = "server=" & server & ";" _
+            & "uid=test;" _
+            & "pwd=test;" _
+            & "database=mm"
+
+
         NumericUpDown1.Value = 1
         ListView1.View = 1
         ListView2.View = 1
 
 
+        With DataGridView1
+            '.AutoGenerateColumns = True
+            .ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .AutoResizeColumns()
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+        End With
+
+        Me.DataGridView1.Dock = System.Windows.Forms.DockStyle.Fill '
+        Me.DataGridView2.Dock = System.Windows.Forms.DockStyle.Fill '
+        Me.DataGridView3.Dock = System.Windows.Forms.DockStyle.Fill '
+
+
+        Dim dtListaObiektow As DataTable = New DataTable()
+        Dim dtDaneDoZapisu As DataTable = New DataTable()
+        Dim dtBrakDanych As DataTable = New DataTable()
+
+        Dim row As DataRow
+        Dim row2 As DataRow
+        Dim row3 As DataRow
+
+        For i = 1 To 5
+            'test_str = Mid(s, 2, Len(s) - 2)
+            dtListaObiektow.Columns.Add(New DataColumn(i.ToString, GetType(String)))
+            dtDaneDoZapisu.Columns.Add(New DataColumn(i.ToString, GetType(String)))
+            dtBrakDanych.Columns.Add(New DataColumn(i.ToString, GetType(String)))
+        Next
+
+
         Dim url As String = "https://platforma.enspirion.pl/services/energa/?pass=mFffGMVLcDNQRdeubJ3qFH2tvpb2zA2KDxFx4epD9XSc3BF2GB"
         Dim webClient As New WebClient
         Dim rawJSON As String
+        Dim zestaw As Root
 
-        rawJSON = webClient.DownloadString(url)
-        Dim zestaw As Root = JsonConvert.DeserializeObject(Of Root)(rawJSON)
+        Try
+            Using WC As New Net.WebClient
+
+
+                rawJSON = webClient.DownloadString(url)
+
+                If rawJSON.Length > 0 Then
+                    zestaw = JsonConvert.DeserializeObject(Of Root)(rawJSON)
+
+                    Console.WriteLine("połączenie ok")
+
+                Else
+                    Console.WriteLine("bład połączenia")
+                End If
+            End Using
+
+        Catch ex As Exception
+            MessageBox.Show(ex.InnerException.Message, "Error")
+
+        End Try
+
+
+
+
+
+
+
+
 
         Console.WriteLine(zestaw.value_interval)
         Console.WriteLine(zestaw.value_unit)
@@ -34,8 +105,15 @@ Public Class Form1
 
         Dim zestaw2 As DataItem
         ' Dim zestaw3 As Latest_valuesItem
-        Dim listaDane(2)
+        'Dim listaDane(2)
         ' Dim listaDaneCzas(2)
+
+        Dim rowArrayListaObiektow As Object() = New Object(4) {}
+        Dim rowArrayDane As Object() = New Object(4) {}
+        Dim rowArrayBrakDanych As Object() = New Object(4) {}
+
+        Dim ID_obiekt_BD As Integer
+
 
         For i = 0 To zestaw.data.Count - 1
             zestaw2 = zestaw.data(i)
@@ -44,25 +122,122 @@ Public Class Form1
             'ListView1.Items.Add(zestaw.data(i).name)
             ListView2.Items.Add(New ListViewItem(New String() {i + 1, zestaw2.name, zestaw2.mac, zestaw2.detector_id}))
 
+
+            ID_obiekt_BD = Nothing
+
+            ID_obiekt_BD = Poierz_dane_id(myConnectionString, zestaw2.mac & "-" & zestaw2.detector_id)
+
+            If ID_obiekt_BD > 0 Then
+                ID_obiekt_BD = ID_obiekt_BD + 10000
+            End If
+
+
+            rowArrayListaObiektow(0) = i
+            rowArrayListaObiektow(1) = zestaw2.name
+            rowArrayListaObiektow(2) = zestaw2.mac
+            rowArrayListaObiektow(3) = zestaw2.detector_id
+            rowArrayListaObiektow(4) = ID_obiekt_BD
+
+            row = dtListaObiektow.NewRow()
+            row.ItemArray = rowArrayListaObiektow
+            dtListaObiektow.Rows.Add(row)
+
+            'row = dtListaObiektow.Rows(0)
+
+
+
             For j = 0 To zestaw2.latest_values.Count - 1
                 'zestaw3 = zestaw2.latest_values(j)
                 'Console.WriteLine("     " & j + 1 & "," & zestaw3.timestamp & ", " & zestaw3.value)
                 ' ListView1.Items.Add("     " & j + 1 & "," & zestaw3.timestamp & ", " & zestaw3.value)
                 'ListView1.Items.Add("     " & zestaw.data(i).latest_values(j).timestamp & ", " & zestaw.data(i).latest_values(j).value)
                 ' ListView1.Items.Add(New ListViewItem(New String() {i + 1, zestaw.data(i).name, zestaw.data(i).mac, zestaw.data(i).detector_id, zestaw.data(i).latest_values(j).timestamp, zestaw.data(i).latest_values(j).value}))
-                listaDane(j) = ""
-                listaDane(j) = zestaw.data(i).latest_values(j).value
+                'listaDane(j) = ""
+                'listaDane(j) = zestaw.data(i).latest_values(j).value
 
+
+                If zestaw2.latest_values.Count <> 3 Then
+                    ListView1.Items.Add("i=" & i & "    j=" & j & "    licznik=" & zestaw2.latest_values.Count)
+                End If
+
+
+                'gdy są dane
                 If zestaw2.latest_values.Count > 0 Then
+
+                    rowArrayDane(0) = zestaw.data(i).name
+                    rowArrayDane(1) = zestaw.data(i).mac
+                    rowArrayDane(2) = zestaw.data(i).detector_id
+                    rowArrayDane(3) = zestaw.data(i).latest_values(j).value
+                    rowArrayDane(4) = zestaw.data(i).latest_values(j).timestamp
+
+
+                    row2 = dtDaneDoZapisu.NewRow()
+                    row2.ItemArray = rowArrayDane
+                    dtDaneDoZapisu.Rows.Add(row2)
+                Else
+                    rowArrayBrakDanych(0) = zestaw.data(i).name
+                    rowArrayBrakDanych(1) = zestaw.data(i).mac
+                    rowArrayBrakDanych(2) = zestaw.data(i).detector_id
+                    'rowArrayBrakDanych(3) = zestaw.data(i).latest_values(j).value
+                    'rowArrayBrakDanych(4) = zestaw.data(i).latest_values(j).timestamp
+
+                    row3 = dtDaneDoZapisu.NewRow()
+                    row3.ItemArray = rowArrayBrakDanych
+                    dtBrakDanych.Rows.Add(row3)
 
                 End If
 
             Next
 
-            ListView1.Items.Add(New ListViewItem(New String() {i + 1, zestaw.data(i).name, zestaw.data(i).mac, zestaw.data(i).detector_id, listaDane(0), listaDane(1), listaDane(2)}))
+
+
+            'dodanie elementow do listy
+            'ListView1.Items.Add(New ListViewItem(New String() {i + 1, zestaw.data(i).name, zestaw.data(i).mac, zestaw.data(i).detector_id, listaDane(0), listaDane(1), listaDane(2)}))
+
+
+
+
+
+
+
+
 
         Next
 
+
+        DataGridView1.DataSource = dtListaObiektow
+        DataGridView2.DataSource = dtDaneDoZapisu
+        DataGridView3.DataSource = dtBrakDanych
+
+
+        'autosize kolumn
+        For i As Integer = 0 To DataGridView1.Columns.Count - 1
+            If i <> (DataGridView1.Columns.Count - 1) Then
+                DataGridView1.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+            Else
+                DataGridView1.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            End If
+        Next
+
+        For i As Integer = 0 To DataGridView2.Columns.Count - 1
+            If i <> (DataGridView2.Columns.Count - 1) Then
+                DataGridView2.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+            Else
+                DataGridView2.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            End If
+        Next
+
+        For i As Integer = 0 To DataGridView3.Columns.Count - 1
+            If i <> (DataGridView3.Columns.Count - 1) Then
+                DataGridView3.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+            Else
+                DataGridView3.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            End If
+        Next
+
+
+
+        'ustawienie nazwy kolumn
         ListView1.Columns(4).Text = zestaw.data(0).latest_values(0).timestamp
         ListView1.Columns(5).Text = zestaw.data(0).latest_values(1).timestamp
         ListView1.Columns(6).Text = zestaw.data(0).latest_values(2).timestamp
@@ -70,8 +245,6 @@ Public Class Form1
         ListView1.Items.Add("Koniec parsowania.")
         ListView1.Items.Add("Rozpoczęcie zapisu na bazę")
 
-        Dim dt As DataTable = New DataTable()
-        ' Zapis_danych_do_bazy(dt)
 
 
         'Dim DataSet As DataSet = JsonConvert.DeserializeObject(Of DataSet)(rawJSON)
@@ -190,9 +363,9 @@ Public Class Form1
         End Try
     End Function
 
-    Private Function Poierz_dane_id(connString As String, nazwa As String) As Integer
+    Private Function Poierz_dane_id(connString As String, mac As String) As Integer
         'Dim connString As String = "server=REMOVED;Port=REMOVED; user id=REMOVED; password=REMOVED; database=REMOVED"
-        Dim sqlQuery As String = "SELECT id, nazwa_z_pliku FROM id_formuly WHERE nazwa_z_pliku = @uname"
+        Dim sqlQuery As String = "SELECT id, nazwa_z_pliku, mac, ID_ERGH FROM id_formuly WHERE mac = @uname"
 
 
         Using sqlConn As New MySqlConnection(connString)
@@ -201,7 +374,7 @@ Public Class Form1
                     .Connection = sqlConn
                     .CommandText = sqlQuery
                     .CommandType = CommandType.Text
-                    .Parameters.AddWithValue("@uname", nazwa)
+                    .Parameters.AddWithValue("@uname", mac)
                 End With
                 Try
                     sqlConn.Open()
@@ -242,7 +415,13 @@ Public Class Form1
 
     End Sub
 
+    Public Sub Wyslij_email()
 
+    End Sub
+
+    Private Sub SplitContainer1_Panel1_Paint(sender As Object, e As PaintEventArgs) Handles SplitContainer1.Panel1.Paint
+
+    End Sub
 End Class
 
 Public Class Latest_valuesItem
