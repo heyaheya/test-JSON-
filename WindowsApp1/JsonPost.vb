@@ -44,27 +44,3 @@ Public Class JsonPost
 
 End Class
 
-Public Class json1
-
-
-
-        Public Class Latest_valuesItem
-            Public Property timestamp As String
-            Public Property value As Double
-        End Class
-
-        Public Class DataItem
-            Public Property name As String
-            Public Property mac As String
-            Public Property detector_id As Integer
-            Public Property latest_values As List(Of Latest_valuesItem)
-        End Class
-
-        Public Class Root
-            Public Property value_interval As String
-            Public Property value_unit As String
-            Public Property timestamp_timezone As String
-            Public Property data As List(Of DataItem)
-        End Class
-
-    End Class
