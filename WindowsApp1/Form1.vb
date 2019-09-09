@@ -8,6 +8,8 @@ Imports System.IO
 Imports MySql.Data.MySqlClient
 
 
+'zapis aby przywrocic poprawną wersje na 982
+
 
 Public Class Form1
 
