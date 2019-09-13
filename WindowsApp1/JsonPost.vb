@@ -16,13 +16,15 @@ Imports System.Net
 Imports System.Text
 Public Class JsonPost
 
+#Disable Warning IDE0044 ' Dodaj modyfikator tylko do odczytu
     Private urlToPost As String = ""
+#Enable Warning IDE0044 ' Dodaj modyfikator tylko do odczytu
 
     Public Sub New(ByVal urlToPost As String)
         Me.urlToPost = urlToPost
     End Sub
 
-    Public Function postData(ByVal dictData As Dictionary(Of String, Object)) As Boolean
+    Public Function PostData(ByVal dictData As Dictionary(Of String, Object)) As Boolean
         Dim webClient As New WebClient()
         Dim resByte As Byte()
         Dim resString As String
