@@ -15,16 +15,14 @@ Public Class Form1
 
     Public status_logu As Integer = 1
 
-    Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Dim server As String = "eobx-s-00224"
 
-        Dim server As String = "eobx-s-00224"
-        '--------------
-        'do zrobienia f-cja przełączająca BD        '----------------
-
-        Dim myConnectionString As String = "server=" & server & ";" _
+    Public myConnectionString As String = "server=" & server & ";" _
             & "uid=test;" _
             & "pwd=test;" _
             & "database=mm"
+
+    Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
 
         With DataGridView1
@@ -112,7 +110,7 @@ Public Class Form1
             ID_obiekt_BD = Nothing
             ID_obiekt_BD = Poierz_dane_id(myConnectionString, zestaw2.Mac & "-" & zestaw2.Detector_id)
             If ID_obiekt_BD > 0 Then
-                ID_obiekt_BD = ID_obiekt_BD + 10000
+                ID_obiekt_BD = ID_obiekt_BD '+ 10000
             End If
 
             rowArrayListaObiektow(0) = i
@@ -185,17 +183,6 @@ Public Class Form1
 
     Function Zapis_danych_do_bazy(dt As DataTable) As Integer
 
-        Dim server As String = "eobx-s-00224"
-        '--------------
-        'do zrobienia f-cja przełączająca BD
-        '----------------
-
-        Dim myConnectionString As String = "server=" & server & ";" _
-                & "uid=test;" _
-                & "pwd=test;" _
-                & "database=mm"
-
-
         Dim conn As New MySql.Data.MySqlClient.MySqlConnection(myConnectionString)
         Dim myInsertQuery As String
         Dim FormulaID As Integer
@@ -255,7 +242,7 @@ Public Class Form1
     End Function
 
     Private Function Poierz_dane_id(connString As String, mac As String) As Integer
-        Dim sqlQuery As String = "SELECT id, nazwa_z_pliku, mac, ID_ERGH FROM id_formuly WHERE mac = @uname"
+        Dim sqlQuery As String = "SELECT id, nazwa_z_pliku, mac, ID_ERGH FROM id_formuly_1 WHERE mac = @uname"
         Using sqlConn As New MySqlConnection(connString)
             Using sqlComm As New MySqlCommand()
                 With sqlComm
