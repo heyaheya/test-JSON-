@@ -87,10 +87,10 @@ Public Class Form1
 
         'Console.WriteLine("pobieranie i parsowanie danych trwało:" & Format(stempel_czasowy - Now(), "yyyy-MM-dd HH:mm:ss"))
 
-        Console.WriteLine(zestaw.Value_interval)
-        Console.WriteLine(zestaw.Value_unit)
-        Console.WriteLine(zestaw.Timestamp_timezone)
-        Console.WriteLine("licznik pomiarów:" & zestaw.Data.Count)
+        Console.WriteLine(zestaw.value_interval)
+        Console.WriteLine(zestaw.value_unit)
+        Console.WriteLine(zestaw.timestamp_timezone)
+        Console.WriteLine("licznik pomiarów:" & zestaw.data.Count)
 
         Dim zestaw2 As DataItem
         ' Dim zestaw3 As Latest_valuesItem
@@ -104,8 +104,8 @@ Public Class Form1
         Dim ID_obiekt_BD As Integer
 
 
-        For i = 0 To zestaw.Data.Count - 1
-            zestaw2 = zestaw.Data(i)
+        For i = 0 To zestaw.data.Count - 1
+            zestaw2 = zestaw.data(i)
 
             ID_obiekt_BD = Nothing
             ID_obiekt_BD = Poierz_dane_id(myConnectionString, zestaw2.Mac & "-" & zestaw2.Detector_id)
@@ -122,25 +122,25 @@ Public Class Form1
             row.ItemArray = rowArrayListaObiektow
             dtListaObiektow.Rows.Add(row)
 
-            For j = 0 To zestaw2.Latest_values.Count - 1
-                If zestaw2.Latest_values.Count <> 3 Then
+            For j = 0 To zestaw2.latest_values.Count - 1
+                If zestaw2.latest_values.Count <> 3 Then
                     Console.WriteLine(" niepełne dane dla: " & zestaw2.Name & ", " & zestaw2.Mac & "-" & zestaw2.Detector_id & ", ilosc danych=" & zestaw2.Latest_values.Count)
                 End If
 
                 'gdy są dane
-                If zestaw2.Latest_values.Count > 0 Then
-                    rowArrayDane(0) = zestaw.Data(i).Name
-                    rowArrayDane(1) = zestaw.Data(i).Mac
-                    rowArrayDane(2) = zestaw.Data(i).Detector_id
-                    rowArrayDane(3) = zestaw.Data(i).Latest_values(j).Value
-                    rowArrayDane(4) = zestaw.Data(i).Latest_values(j).Timestamp
+                If zestaw2.latest_values.Count > 0 Then
+                    rowArrayDane(0) = zestaw.data(i).Name
+                    rowArrayDane(1) = zestaw.data(i).Mac
+                    rowArrayDane(2) = zestaw.data(i).Detector_id
+                    rowArrayDane(3) = zestaw.data(i).latest_values(j).Value
+                    rowArrayDane(4) = zestaw.data(i).latest_values(j).Timestamp
                     row2 = dtDaneDoZapisu.NewRow()
                     row2.ItemArray = rowArrayDane
                     dtDaneDoZapisu.Rows.Add(row2)
                 Else
-                    rowArrayBrakDanych(0) = zestaw.Data(i).Name
-                    rowArrayBrakDanych(1) = zestaw.Data(i).Mac
-                    rowArrayBrakDanych(2) = zestaw.Data(i).Detector_id
+                    rowArrayBrakDanych(0) = zestaw.data(i).Name
+                    rowArrayBrakDanych(1) = zestaw.data(i).Mac
+                    rowArrayBrakDanych(2) = zestaw.data(i).Detector_id
                     row3 = dtDaneDoZapisu.NewRow()
                     row3.ItemArray = rowArrayBrakDanych
                     dtBrakDanych.Rows.Add(row3)
