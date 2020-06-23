@@ -24,24 +24,9 @@ Public Class Form1
 
     Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-
-        With DataGridView1
-            '.AutoGenerateColumns = True
-            .ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            .AutoResizeColumns()
-            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
-        End With
-
-        Me.DataGridView1.Dock = System.Windows.Forms.DockStyle.Fill '
-        Me.DataGridView2.Dock = System.Windows.Forms.DockStyle.Fill '
-        Me.DataGridView3.Dock = System.Windows.Forms.DockStyle.Fill '
-
-
         Dim dtListaObiektow As DataTable = New DataTable()
         Dim dtDaneDoZapisu As DataTable = New DataTable()
         Dim dtBrakDanych As DataTable = New DataTable()
-
         Dim row As DataRow
         Dim row2 As DataRow
         Dim row3 As DataRow
@@ -53,7 +38,6 @@ Public Class Form1
             dtBrakDanych.Columns.Add(New DataColumn(i.ToString, GetType(String)))
         Next
 
-
         Dim url As String = "https://platforma.enspirion.pl/services/energa/?pass=mFffGMVLcDNQRdeubJ3qFH2tvpb2zA2KDxFx4epD9XSc3BF2GB"
         Dim webClient As New WebClient
         Dim rawJSON As String
@@ -61,56 +45,74 @@ Public Class Form1
 
         zestaw = Nothing
 
-        'Dim stempel_czasowy As DateTime = Now()
 
+        With DataGridView1
+            '.AutoGenerateColumns = True
+            .ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .AutoResizeColumns()
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+            .Dock = DockStyle.Fill
+        End With
+
+        With DataGridView2
+            '.AutoGenerateColumns = True
+            .ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .AutoResizeColumns()
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+            .Dock = DockStyle.Fill
+        End With
+
+        With DataGridView3
+            '.AutoGenerateColumns = True
+            .ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            .AutoResizeColumns()
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells
+            .Dock = DockStyle.Fill
+        End With
+
+
+        'Dim stempel_czasowy As DateTime = Now()
         Try
             Using WC As New Net.WebClient
                 rawJSON = webClient.DownloadString(url)
 
-                'Console.WriteLine("webClient.DownloadString(url) - " & Format(stempel_czasowy - Now(), "yyyy-MM-dd HH:mm:ss"))
-
-                'Console.WriteLine("webClient.DownloadString(url) - " & Format(stempel_czasowy - Now(), "yyyy-MM-dd HH:mm:ss"))
                 If rawJSON.Length > 0 Then
                     zestaw = JsonConvert.DeserializeObject(Of Root)(rawJSON)
-                    Console.WriteLine("połączenie ok")
+                    WriteToFile2("połączenie ok")
                 Else
-                    Console.WriteLine("bład połączenia")
+                    WriteToFile2("bład połączenia")
                 End If
             End Using
 
         Catch ex As Exception
-
-            Console.WriteLine(ex.InnerException.Message)
-
+            WriteToFile2(ex.InnerException.Message)
         End Try
 
-
-        'Console.WriteLine("pobieranie i parsowanie danych trwało:" & Format(stempel_czasowy - Now(), "yyyy-MM-dd HH:mm:ss"))
-
-        Console.WriteLine(zestaw.value_interval)
-        Console.WriteLine(zestaw.value_unit)
-        Console.WriteLine(zestaw.timestamp_timezone)
-        Console.WriteLine("licznik pomiarów:" & zestaw.data.Count)
+        'WriteToFile2("pobieranie i parsowanie danych trwało:" & Format(stempel_czasowy - Now(), "yyyy-MM-dd HH:mm:ss"))
+        WriteToFile2(zestaw.Value_interval)
+        WriteToFile2(zestaw.Value_unit)
+        WriteToFile2(zestaw.Timestamp_timezone)
+        WriteToFile2("licznik pomiarów:" & zestaw.Data.Count)
 
         Dim zestaw2 As DataItem
-        ' Dim zestaw3 As Latest_valuesItem
+        'Dim zestaw3 As Latest_valuesItem
         'Dim listaDane(2)
-        ' Dim listaDaneCzas(2)
-
+        'Dim listaDaneCzas(2)
         Dim rowArrayListaObiektow As Object() = New Object(4) {}
         Dim rowArrayDane As Object() = New Object(4) {}
         Dim rowArrayBrakDanych As Object() = New Object(4) {}
 
         Dim ID_obiekt_BD As Integer
 
-
-        For i = 0 To zestaw.data.Count - 1
-            zestaw2 = zestaw.data(i)
-
+        For i = 0 To zestaw.Data.Count - 1
+            zestaw2 = zestaw.Data(i)
             ID_obiekt_BD = Nothing
-            ID_obiekt_BD = Poierz_dane_id(myConnectionString, zestaw2.Mac & "-" & zestaw2.Detector_id)
+            ID_obiekt_BD = Pobierz_dane_id(myConnectionString, zestaw2.Mac & "-" & zestaw2.Detector_id)
             If ID_obiekt_BD > 0 Then
-                ID_obiekt_BD = ID_obiekt_BD '+ 10000
+                ID_obiekt_BD = ID_obiekt_BD
             End If
 
             rowArrayListaObiektow(0) = i
@@ -122,57 +124,43 @@ Public Class Form1
             row.ItemArray = rowArrayListaObiektow
             dtListaObiektow.Rows.Add(row)
 
-            For j = 0 To zestaw2.latest_values.Count - 1
-                If zestaw2.latest_values.Count <> 3 Then
-                    Console.WriteLine(" niepełne dane dla: " & zestaw2.Name & ", " & zestaw2.Mac & "-" & zestaw2.Detector_id & ", ilosc danych=" & zestaw2.Latest_values.Count)
+            For j = 0 To zestaw2.Latest_values.Count - 1
+                If zestaw2.Latest_values.Count <> 3 Then
+                    WriteToFile2(" niepełne dane dla: " & zestaw2.Name & ", " & zestaw2.Mac & "-" & zestaw2.Detector_id & ", ilosc danych=" & zestaw2.Latest_values.Count)
                 End If
 
                 'gdy są dane
-                If zestaw2.latest_values.Count > 0 Then
-                    rowArrayDane(0) = zestaw.data(i).Name
-                    rowArrayDane(1) = zestaw.data(i).Mac
-                    rowArrayDane(2) = zestaw.data(i).Detector_id
-                    rowArrayDane(3) = zestaw.data(i).latest_values(j).Value
-                    rowArrayDane(4) = zestaw.data(i).latest_values(j).Timestamp
+                If zestaw2.Latest_values.Count > 0 Then
+                    rowArrayDane(0) = zestaw.Data(i).Name
+                    rowArrayDane(1) = zestaw.Data(i).Mac
+                    rowArrayDane(2) = zestaw.Data(i).Detector_id
+                    rowArrayDane(3) = zestaw.Data(i).Latest_values(j).Value
+                    rowArrayDane(4) = zestaw.Data(i).Latest_values(j).Timestamp
                     row2 = dtDaneDoZapisu.NewRow()
                     row2.ItemArray = rowArrayDane
                     dtDaneDoZapisu.Rows.Add(row2)
                 Else
-                    rowArrayBrakDanych(0) = zestaw.data(i).Name
-                    rowArrayBrakDanych(1) = zestaw.data(i).Mac
-                    rowArrayBrakDanych(2) = zestaw.data(i).Detector_id
+                    rowArrayBrakDanych(0) = zestaw.Data(i).Name
+                    rowArrayBrakDanych(1) = zestaw.Data(i).Mac
+                    rowArrayBrakDanych(2) = zestaw.Data(i).Detector_id
                     row3 = dtDaneDoZapisu.NewRow()
                     row3.ItemArray = rowArrayBrakDanych
                     dtBrakDanych.Rows.Add(row3)
                 End If
             Next
 
+
+
+
         Next
 
-
-        DataGridView1.DataSource = dtListaObiektow
-        DataGridView2.DataSource = dtDaneDoZapisu
-        DataGridView3.DataSource = dtBrakDanych
-
-
-        'autosize kolumn
-        For i As Integer = 0 To DataGridView1.Columns.Count - 1
-            If i <> (DataGridView1.Columns.Count - 1) Then
-                DataGridView1.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
-            Else
-                DataGridView1.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            End If
-        Next
-
-        For i As Integer = 0 To DataGridView2.Columns.Count - 1
-            If i <> (DataGridView2.Columns.Count - 1) Then
-                DataGridView2.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
-            Else
-                DataGridView2.Columns(i).AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            End If
-        Next
+        'nie uruchamia  się przy trybie bez Form1
+        'DataGridView1.DataSource = dtListaObiektow
+        'DataGridView2.DataSource = dtDaneDoZapisu
+        'DataGridView3.DataSource = dtBrakDanych
 
         Zapis_danych_do_bazy(dtDaneDoZapisu)
+
 
 
     End Sub
@@ -204,7 +192,7 @@ Public Class Form1
             'zapis do bazy
             For Each row1 As DataRow In dt.Rows
 
-                FormulaID = Poierz_dane_id(myConnectionString, row1(1) & "-" & row1(2))
+                FormulaID = Pobierz_dane_id(myConnectionString, row1(1) & "-" & row1(2))
 
                 If FormulaID > 0 Then
 
@@ -222,26 +210,26 @@ Public Class Form1
                     'zamkniecie polaczenia
                     conn.Close()
 
-                    Console.WriteLine(FormulaID & ", " & Format(DataTime, "yyyy-MM-dd HH:mm:ss") & ", " & Replace(Volume.ToString, ",", "."))
+                    'WriteToFile2(FormulaID & ", " & Format(DataTime, "yyyy-MM-dd HH:mm:ss") & ", " & Replace(Volume.ToString, ",", "."))
                 Else
-                    Console.WriteLine("Nie znalezniono ID formuły dla: " & row1(0))
+                    WriteToFile2("Nie znalezniono ID formuły dla: " & row1(0))
                 End If
             Next
             Return ilosc_danych
         Catch ex As MySql.Data.MySqlClient.MySqlException
             Select Case ex.Number
                 Case 0
-                    Console.WriteLine("Brak połączenia z serwerem bazodanowym.", 1)
+                    WriteToFile2("Brak połączenia z serwerem bazodanowym.", 1)
                 Case 1045
-                    Console.WriteLine("Błąd logowania. Błędny login lub hasło.", 1)
+                    WriteToFile2("Błąd logowania. Błędny login lub hasło.", 1)
                 Case Else
-                    Console.WriteLine("Brak połaczenia z bazą. Błąd: " & ex.Message, 1)
+                    WriteToFile2("Brak połaczenia z bazą. Błąd: " & ex.Message, 1)
             End Select
             Return 0
         End Try
     End Function
 
-    Private Function Poierz_dane_id(connString As String, mac As String) As Integer
+    Private Function Pobierz_dane_id(connString As String, mac As String) As Integer
         Dim sqlQuery As String = "SELECT id, nazwa_z_pliku, mac, ID_ERGH FROM id_formuly_1 WHERE mac = @uname"
         Using sqlConn As New MySqlConnection(connString)
             Using sqlComm As New MySqlCommand()
@@ -258,11 +246,13 @@ Public Class Form1
                     If sqlReader.HasRows Then
                         Return CInt(sqlReader("id"))
                     Else
+
                         Return 0
+
                     End If
                 Catch ex As MySqlException
                     Return 0
-                    Console.WriteLine("Błąd w funkcji pobierania id dla nazwy formuły o numerze: " & ex.ToString(), 1)
+                    WriteToFile2("Błąd w funkcji pobierania id dla nazwy formuły o numerze: " & ex.ToString(), 1)
                 Finally
                     sqlConn.Close()
                 End Try
@@ -270,7 +260,37 @@ Public Class Form1
         End Using
     End Function
 
+    Public Sub WriteToFile(text As String, Optional i As Integer = 1)
+        'Dim path As String = "C:\temp\" & DateTime.Now.ToString("dd/MM/yyyy hh:mm:ss").ToString & "_ServiceLog.txt"if 
+        'Dim text2 As String = DateTime.Now.ToString("dd/MM/yyyy hh:mm:ss").ToString
+        Dim path As String = "C:\temp\" + DateTime.Now.ToString("yyyyMMdd").ToString + "_Podczyt_Miernik_mocy_1_min_log.txt"
+        text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss").ToString & " " & text
+        Using writer As New StreamWriter(path, True)
+            writer.WriteLine(text)
+            writer.Close()
+        End Using
 
+        ListView1.Items.Add(New ListViewItem(text))
+        ListView1.Items(ListView1.Items.Count - 1).EnsureVisible()
+
+    End Sub
+
+    Public Sub WriteToFile2(text As String, Optional poziom As Integer = 1)
+        'Dim path As String = "C:\temp\" & DateTime.Now.ToString("dd/MM/yyyy hh:mm:ss").ToString & "_ServiceLog.txt"if 
+        'Dim text2 As String = DateTime.Now.ToString("dd/MM/yyyy hh:mm:ss").ToString
+
+        If status_logu >= poziom Then
+
+            Dim path As String = "C:\temp\" + DateTime.Now.ToString("yyyyMMdd").ToString + "_Podczyt_Miernik_mocy_1_min_log.txt"
+            text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss").ToString & " " & text
+            Using writer As New StreamWriter(path, True)
+                writer.WriteLine(text)
+                writer.Close()
+            End Using
+
+        End If
+
+    End Sub
 
 End Class
 
